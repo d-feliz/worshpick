@@ -43,5 +43,29 @@ public enum ClaudePrompts {
         """
     }
 
+    public static func suggestion(
+        serviceDescription: String, serviceDate: Date, slots: [ServiceSlot], compactCatalog: [String]
+    ) -> String {
+        let dateText = serviceDate.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "es")))
+        let slotLines = slots.enumerated().map { "\($0.offset): \($0.element.label) (\($0.element.criteriaDescription))" }
+        return """
+            Eres un asistente que ayuda a un líder de alabanza a elegir canciones para un servicio de iglesia.
+
+            Servicio del \(dateText):
+            \(serviceDescription)
+
+            Elige una canción del catálogo para cada hueco. Respeta los criterios de cada hueco cuando sea posible y \
+            prioriza canciones cuyo mensaje, temas y pasajes encajen con el servicio. No repitas una canción en dos huecos.
+            Para cada hueco devuelve slotIndex, songId (el id exacto del catálogo), reason (una frase en español que \
+            explique por qué encaja) y hasta 2 alternativeSongIds del catálogo. Usa solo ids que aparecen en el catálogo.
+
+            Huecos:
+            \(slotLines.joined(separator: "\n"))
+
+            Catálogo (una canción JSON por línea):
+            \(compactCatalog.joined(separator: "\n"))
+            """
+    }
+
     public static let connectionTest = "Responde con ok = true."
 }

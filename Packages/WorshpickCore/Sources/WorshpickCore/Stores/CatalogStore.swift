@@ -45,6 +45,12 @@ public final class CatalogStore: Sendable {
         }
     }
 
+    public func passagesBySongId() throws -> [UUID: [Passage]] {
+        try database.writer.read { database in
+            Dictionary(grouping: try Passage.order(Column("startPosition")).fetchAll(database), by: \.songId)
+        }
+    }
+
     public func existingThemes() throws -> [String] {
         try distinctValues(ofJSONArrayColumn: "themes")
     }
