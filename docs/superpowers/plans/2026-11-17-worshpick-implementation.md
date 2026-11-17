@@ -254,22 +254,22 @@ enum MatchReason { case lyricsSnippet(String), passage(BibleReference), theme(St
 
 **Archivo:** `scripts/make-test-videos.sh` → `Fixtures/videos/`.
 
-Con ffmpeg genera 3 videos cortos (10–15 s, 640×360, H.264, sin audio), cada uno con 3–4 pantallas de letra con `drawtext`:
+Un script Swift (`scripts/render-lyric-screens.swift`) dibuja las pantallas en PNG y ffmpeg las une en 3 videos (el ffmpeg de Homebrew no trae `drawtext`): cortos (10–15 s, 640×360, H.264, sin audio), cada uno con 3–4 pantallas de letra con `drawtext`:
 - `cancion-es.mp4` — letra en español con tildes y ñ.
 - `song-en.mp4` — letra en inglés.
 - `sin-texto.mp4` — solo color de fondo (para el caso "Vision no encuentra texto").
 
 Los videos se guardan en git (pesan pocos KB) para que las pruebas no dependan de ffmpeg.
 
-### T2.3 `PerceptualHash` y `FrameSampler`
+### T2.3 `ScreenFingerprint` y `FrameSampler`
 
-**Archivos:** `Helpers/PerceptualHash.swift`, `Services/FrameSampler.swift`.
+**Archivos:** `Helpers/ScreenFingerprint.swift`, `Services/FrameSampler.swift`.
 
-- `PerceptualHash.differenceHash(of: CGImage) -> UInt64` (dHash 9×8 en escala de grises) y `hammingDistance(_:_:) -> Int`.
-- `FrameSampler.sampleFrames(from: URL, interval: TimeInterval = 1.5, maximumFrameCount: Int = 120) async throws -> [SampledFrame]` con `AVAssetImageGenerator.images(for:)`. Reduce cada fotograma a 1280 px de ancho. Descarta un fotograma si la distancia con el último fotograma guardado es ≤ 5.
+- `ScreenFingerprint(of: CGImage)` (miniatura 64×36 en escala de grises) y `difference(from:) -> Double` (diferencia media por píxel). *Cambio durante la implementación:* un dHash 9×8 no distinguía pantallas de letra con el mismo fondo.
+- `FrameSampler.sampleFrames(from: URL, interval: TimeInterval = 1.5, maximumFrameCount: Int = 120) async throws -> [SampledFrame]` con `AVAssetImageGenerator.images(for:)`. Reduce cada fotograma a 1280 px de ancho. Descarta un fotograma si su diferencia con el último fotograma guardado es ≤ 1,0 (entre pantallas distintas se mide ~2–3).
 - `SampledFrame { timestamp, image: CGImage }`.
 
-**Pruebas:** dos imágenes iguales → distancia 0; imágenes distintas → distancia > 5; `cancion-es.mp4` devuelve tantos fotogramas como pantallas tiene (±1); nunca más de `maximumFrameCount`.
+**Pruebas:** dos imágenes iguales → diferencia 0; pantallas distintas → diferencia > 1,0; `cancion-es.mp4` devuelve tantos fotogramas como pantallas tiene (±1); nunca más de `maximumFrameCount`.
 
 ### T2.4 `OCREngine` y `VisionOCR`
 
