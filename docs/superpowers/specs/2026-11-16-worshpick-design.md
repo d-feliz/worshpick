@@ -91,15 +91,18 @@ Worshpick/
 | `moments` | IA, 1–2 valores de una lista fija | |
 | `energy` | IA: `high` / `medium` / `low` | |
 | `ocrEngine` | app | `vision` o `claude`. |
+| `ocrText` | app | Texto OCR guardado. "Reanalizar" lo usa sin repetir el OCR. |
 | `ocrConfidence` | app | Confianza media de Vision. Por debajo de 0,6 la canción queda marcada "Revisar". |
 | `status` | app | `pending → extracting → analyzing → ready`, o `failed(reason)`. |
 | `manuallyEditedFields` | app | Conjunto de nombres de campo. |
 
 ### Passage
 
-`songId, bookId, chapter, verseStart?, verseEnd?, kind (quote | allusion)`
+`songId, bookId, startPosition, endPosition, kind (quote | allusion)`
 
 `bookId` sale de una tabla con los 66 libros, sus nombres en español e inglés y sus abreviaturas (Rom, Ro, Romanos, Romans...).
+
+Una posición es `capítulo × 1000 + versículo`. "Romanos 8" se guarda como `8001–8999` y "Romanos 8:38-9:2" como `8038–9002`. Así una sola comparación de rangos resuelve capítulos completos, versículos y rangos entre capítulos.
 
 ### Setlist
 
