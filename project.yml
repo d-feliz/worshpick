@@ -1,0 +1,37 @@
+name: Worshpick
+options:
+  deploymentTarget:
+    macOS: "15.0"
+  bundleIdPrefix: com.dfeliz
+packages:
+  WorshpickCore:
+    path: Packages/WorshpickCore
+targets:
+  Worshpick:
+    type: application
+    platform: macOS
+    sources: [Worshpick]
+    dependencies:
+      - package: WorshpickCore
+    info:
+      path: Worshpick/Info.plist
+      properties:
+        CFBundleDisplayName: Worshpick
+        LSApplicationCategoryType: public.app-category.productivity
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dfeliz.worshpick
+        SWIFT_VERSION: "6.0"
+        ENABLE_HARDENED_RUNTIME: YES
+        # No App Sandbox: the app must run the user's own `claude` CLI binary.
+        ENABLE_APP_SANDBOX: NO
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+schemes:
+  Worshpick:
+    build:
+      targets:
+        Worshpick: all
+    test:
+      targets:
+        - package: WorshpickCore/WorshpickCoreTests
