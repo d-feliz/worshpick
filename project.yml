@@ -13,11 +13,17 @@ targets:
     sources: [Worshpick]
     dependencies:
       - package: WorshpickCore
+      - sdk: AVKit.framework
+      - sdk: QuickLookThumbnailing.framework
     info:
       path: Worshpick/Info.plist
       properties:
         CFBundleDisplayName: Worshpick
         LSApplicationCategoryType: public.app-category.productivity
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.dfeliz.worshpick.song
+            UTTypeDescription: Canción de Worshpick
+            UTTypeConformsTo: [public.data]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dfeliz.worshpick

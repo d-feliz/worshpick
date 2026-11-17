@@ -41,8 +41,8 @@ import Testing
     @Test func rejectsUnsupportedFileType() async throws {
         let catalog = try TestCatalog()
         let library = LibraryService(libraryFolder: try makeTemporaryFolder(), catalogStore: catalog.catalogStore)
-        await #expect(throws: ImportError.unsupportedFileType(fileName: "catalog-sample.json")) {
-            try await library.importVideo(at: Fixtures.url("catalog-sample.json"))
+        await #expect(throws: ImportError.unsupportedFileType(fileName: "auth-error.json")) {
+            try await library.importVideo(at: Fixtures.url("claude-cli/auth-error.json"))
         }
     }
 

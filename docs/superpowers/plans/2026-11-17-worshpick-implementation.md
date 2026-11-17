@@ -388,7 +388,7 @@ enum ClaudeError: Error { case notInstalled, notLoggedIn(message: String), usage
 
 ## Fase 4 — Interfaz
 
-Las vistas no tienen pruebas unitarias. Cada tarea termina con una verificación a mano en la app, usando el catálogo de prueba (opción de depuración "Cargar catálogo de prueba").
+Las vistas no tienen pruebas unitarias. `scripts/snapshot-ui.sh` (solo Debug) dibuja la ventana a PNG con una biblioteca temporal; no dibuja las superficies Liquid Glass. Cada tarea termina con una verificación a mano en la app, usando el catálogo de prueba (opción de depuración "Cargar catálogo de prueba").
 
 ### T4.1 Ventana principal [manual]
 
@@ -426,6 +426,7 @@ Las vistas no tienen pruebas unitarias. Cada tarea termina con una verificación
 
 **Archivos:** `Containers/SetlistPanel.swift`, `Containers/SetlistFileGrid.swift` (AppKit), `Components/SetlistHeader.swift`.
 
+- *Cambio durante la implementación:* se usa `SetlistFileTable`, un `NSTableView` (lista tipo Finder) en lugar de `NSCollectionView`, porque arrastra varias filas en el orden de las filas.
 - `SetlistFileGrid` es un `NSCollectionView` dentro de `NSViewRepresentable`. SwiftUI no permite bien arrastrar **varios** archivos a la vez fuera de la app; `NSCollectionView` sí, y además da selección múltiple, ⌘A y reordenar.
 - Cada elemento: miniatura (`QLThumbnailGenerator`) y nombre del archivo, como en Finder.
 - Arrastrar hacia fuera: cada elemento seleccionado escribe su `URL` de archivo (`NSURL` como `NSPasteboardWriting`) en el orden del setlist.

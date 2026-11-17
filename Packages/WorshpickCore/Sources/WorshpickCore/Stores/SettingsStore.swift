@@ -12,10 +12,6 @@ public final class SettingsStore: @unchecked Sendable {
         settings = savedData.flatMap { try? JSONDecoder().decode(AppSettings.self, from: $0) } ?? AppSettings()
     }
 
-    public static var defaultFileURL: URL {
-        LibraryService.defaultLibraryFolder.appending(path: "settings.json")
-    }
-
     public var current: AppSettings {
         lock.withLock { settings }
     }

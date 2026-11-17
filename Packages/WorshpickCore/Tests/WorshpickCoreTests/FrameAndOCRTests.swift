@@ -33,7 +33,7 @@ import Testing
 
     @Test func unreadableVideoThrows() async throws {
         await #expect(throws: FrameSamplerError.unreadableVideo) {
-            try await FrameSampler().sampleFrames(from: Fixtures.url("catalog-sample.json"))
+            try await FrameSampler().sampleFrames(from: Fixtures.url("claude-cli/auth-error.json"))
         }
     }
 

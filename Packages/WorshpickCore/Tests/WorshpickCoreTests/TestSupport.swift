@@ -1,33 +1,6 @@
 import Foundation
 @testable import WorshpickCore
 
-struct SampleSongFixture: Decodable {
-    var title: String
-    var artist: String
-    var language: SongLanguage
-    var lyrics: String
-    var summary: String
-    var keywords: [String]
-    var invitations: [String]
-    var themes: [String]
-    var moments: [String]
-    var energy: Energy
-    var passages: [String]
-
-    var analyzedSong: AnalyzedSong {
-        AnalyzedSong(
-            title: title, artist: artist, language: language, lyrics: lyrics, summary: summary,
-            keywords: keywords, invitations: invitations, themes: themes, moments: moments, energy: energy,
-            passages: passages.map { text in
-                guard let reference = BibleReferenceParser.parseSingleReference(text) else {
-                    fatalError("Fixture passage is not a valid reference: \(text)")
-                }
-                return PassageDraft(reference: reference, kind: .allusion)
-            }
-        )
-    }
-}
-
 enum Fixtures {
     static func url(_ name: String) -> URL {
         Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Fixtures")!
@@ -35,10 +8,6 @@ enum Fixtures {
 
     static func data(_ name: String) throws -> Data {
         try Data(contentsOf: url(name))
-    }
-
-    static func sampleSongs() throws -> [SampleSongFixture] {
-        try JSONDecoder().decode([SampleSongFixture].self, from: data("catalog-sample.json"))
     }
 }
 
@@ -58,9 +27,9 @@ struct TestCatalog {
 
     static func withSampleSongs() throws -> TestCatalog {
         var catalog = try TestCatalog()
-        for fixture in try Fixtures.sampleSongs() {
-            let songId = try catalog.addReadySong(fixture.analyzedSong)
-            catalog.songIdsByTitle[fixture.title] = songId
+        for sampleSong in try SampleCatalog.analyzedSongs() {
+            let songId = try catalog.addReadySong(sampleSong)
+            catalog.songIdsByTitle[sampleSong.title] = songId
         }
         return catalog
     }

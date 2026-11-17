@@ -22,5 +22,18 @@
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Canción de Worshpick</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.dfeliz.worshpick.song</string>
+		</dict>
+	</array>
 </dict>
 </plist>
