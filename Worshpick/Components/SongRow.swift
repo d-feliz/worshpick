@@ -22,6 +22,8 @@ struct SongRow: View {
                         ForEach(song.moments, id: \.self) { TagChip(text: $0, tint: .teal) }
                         if song.needsReview { TagChip(text: "Revisar", tint: .orange) }
                     }
+                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                    .clipped()
                     MatchReasonLabel(matchReason: result.matchReason)
                 } else {
                     Label(DisplayFormatting.status(song), systemImage: song.status == .failed ? "exclamationmark.triangle" : "hourglass")

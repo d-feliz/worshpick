@@ -25,13 +25,15 @@ public struct ProcessClaudeRunner: ClaudeRunning {
     }
 
     /// The prompt goes through stdin, so long OCR text never hits the argument length limit.
+    /// `Process` turns arguments into decomposed Unicode (NFD), so an unescaped "Adoración" in a schema enum
+    /// never matches the composed "Adoración" the model writes, and the CLI gives up after 5 attempts.
     static func arguments(for request: ClaudeRequest) -> [String] {
         var arguments = [
             "-p",
             "--output-format", "json",
             "--no-session-persistence",
             "--model", request.model,
-            "--json-schema", request.jsonSchema,
+            "--json-schema", request.jsonSchema.jsonWithNonASCIIEscaped,
             "--tools", request.allowedTools.joined(separator: ","),
         ]
         if !request.allowedTools.isEmpty {

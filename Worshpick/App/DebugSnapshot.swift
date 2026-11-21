@@ -12,6 +12,12 @@ enum DebugSnapshot {
     static var initialSearchText: String? { environment["WORSHPICK_DEMO_SEARCH"] }
     static var showsSetlistPanelOnly: Bool { environment["WORSHPICK_DEMO_PANEL_ONLY"] == "1" }
     static var selectsFirstResult: Bool { environment["WORSHPICK_DEMO_SELECT_FIRST"] == "1" }
+    /// WORSHPICK_DEMO_WINDOW_SIZE=960x600
+    static var windowSize: CGSize {
+        let dimensions = (environment["WORSHPICK_DEMO_WINDOW_SIZE"] ?? "").split(separator: "x").compactMap { Double($0) }
+        guard dimensions.count == 2 else { return CGSize(width: 1500, height: 860) }
+        return CGSize(width: dimensions[0], height: dimensions[1])
+    }
 
     static func prepareDemoSetlist(in model: AppModel) {
         guard environment["WORSHPICK_DEMO_SETLIST"] == "1", model.currentSetlist?.items.isEmpty ?? true else { return }
@@ -33,7 +39,7 @@ enum DebugSnapshot {
             NSApp.terminate(nil)
             return
         }
-        if !showsSetlistPanelOnly { window.setFrame(NSRect(x: 40, y: 40, width: 1500, height: 860), display: true) }
+        if !showsSetlistPanelOnly { window.setFrame(NSRect(origin: CGPoint(x: 40, y: 40), size: windowSize), display: true) }
         try? await Task.sleep(for: .seconds(1.5))
         guard let contentView = window.contentView,
               let bitmap = contentView.bitmapImageRepForCachingDisplay(in: contentView.bounds) else {

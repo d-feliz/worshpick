@@ -64,6 +64,7 @@ struct WorshpickCommands: Commands {
         CommandGroup(after: .newItem) {
             Button("Nuevo setlist") { model.createSetlist() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+            Button("Reintentar canciones fallidas") { Task { await model.retryFailedSongsWithText() } }
         }
         #if DEBUG
         CommandMenu("Depuración") {

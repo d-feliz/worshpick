@@ -38,13 +38,15 @@ struct LibraryScreen: View {
             )
             Divider()
             IngestProgressBar(progress: model.ingestProgress)
-            HSplitView {
-                resultsList
-                    .frame(minWidth: 380, maxWidth: .infinity, maxHeight: .infinity)
-                if let selectedSongId, let song = results.first(where: { $0.song.id == selectedSongId })?.song ?? model.song(id: selectedSongId) {
-                    SongDetailPanel(song: song)
-                        .frame(minWidth: 320, idealWidth: 400, maxWidth: 560, maxHeight: .infinity)
+            if let selectedSong {
+                MainContentWithSidePanel {
+                    resultsList
+                } sidePanel: {
+                    SongDetailPanel(song: selectedSong)
                 }
+            } else {
+                resultsList
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .navigationTitle("Biblioteca")
@@ -85,6 +87,11 @@ struct LibraryScreen: View {
         .task(id: SearchKey(text: searchText, filters: filters, catalogRevision: model.catalogRevision, setlistRevision: model.setlistRevision)) {
             await runSearch()
         }
+    }
+
+    private var selectedSong: Song? {
+        guard let selectedSongId else { return nil }
+        return results.first(where: { $0.song.id == selectedSongId })?.song ?? model.song(id: selectedSongId)
     }
 
     @ViewBuilder

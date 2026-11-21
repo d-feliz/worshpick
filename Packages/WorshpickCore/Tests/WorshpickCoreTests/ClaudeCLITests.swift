@@ -46,6 +46,25 @@ import Testing
         #expect(arguments == ["-p", "--output-format", "json", "--no-session-persistence", "--model", "sonnet", "--json-schema", "{}", "--tools", ""])
     }
 
+    @Test func schemaArgumentIsASCIIButKeepsTheSameValue() throws {
+        let schema = #"{"enum":["Adoración","Envío","🎹"]}"#
+        let arguments = ProcessClaudeRunner.arguments(for: ClaudeRequest(prompt: "p", jsonSchema: schema, model: "sonnet"))
+        let schemaArgument = try #require(arguments.firstIndex(of: "--json-schema").map { arguments[$0 + 1] })
+        let schemaArgumentIsASCII = schemaArgument.unicodeScalars.allSatisfy(\.isASCII)
+        #expect(schemaArgumentIsASCII)
+        let decodedSchema = try JSONSerialization.jsonObject(with: Data(schemaArgument.utf8)) as? [String: [String]]
+        #expect(decodedSchema?["enum"] == ["Adoración", "Envío", "🎹"])
+    }
+
+    @Test func errorWithoutResultTextUsesTheErrorsList() throws {
+        let envelope = Data(#"{"is_error":true,"subtype":"error_max_structured_output_retries","errors":["Failed to provide valid structured output"]}"#.utf8)
+        #expect {
+            try ClaudeResultEnvelope.structuredOutput(from: envelope)
+        } throws: { error in
+            (error as? ClaudeError) == .failed(message: "Failed to provide valid structured output")
+        }
+    }
+
     @Test func buildsArgumentsWithReadToolAndFolder() {
         let folder = URL(fileURLWithPath: "/tmp/frames")
         let arguments = ProcessClaudeRunner.arguments(for: ClaudeRequest(

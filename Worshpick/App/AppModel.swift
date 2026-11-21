@@ -177,6 +177,16 @@ final class AppModel {
         do { try await ingestPipeline.retry(songId: songId) } catch { errorMessage = error.localizedDescription }
     }
 
+    /// Songs where Vision found no text need "Reprocesar con Claude OCR" instead; a plain retry finds no text again.
+    func retryFailedSongsWithText() async {
+        let failedSongs = ((try? catalogStore.allSongs()) ?? []).filter { $0.status == .failed }
+        let failedSongsWithText = failedSongs.filter { $0.failureReason != IngestPipeline.noTextFoundReason }
+        for song in failedSongsWithText {
+            await reanalyze(song.id)
+        }
+        catalogDidChange()
+    }
+
     func resumeIngest() async {
         await ingestPipeline.resume()
     }

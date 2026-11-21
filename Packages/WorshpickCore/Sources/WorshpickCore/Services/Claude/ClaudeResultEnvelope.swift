@@ -11,7 +11,9 @@ public enum ClaudeResultEnvelope {
         let resultText = envelope["result"] as? String ?? ""
         let isError = envelope["is_error"] as? Bool ?? false
         if isError {
-            throw error(forResultText: resultText)
+            let errorMessages = envelope["errors"] as? [String] ?? []
+            let errorText = resultText.isEmpty ? errorMessages.joined(separator: "\n") : resultText
+            throw error(forResultText: errorText)
         }
 
         if let structuredOutput = envelope["structured_output"], !(structuredOutput is NSNull) {

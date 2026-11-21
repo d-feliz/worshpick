@@ -42,7 +42,7 @@ struct MainWindow: View {
             List(SidebarSection.allCases, selection: $selectedSection) { section in
                 Label(section.title, systemImage: section.systemImage).tag(section)
             }
-            .navigationSplitViewColumnWidth(min: 160, ideal: 180)
+            .navigationSplitViewColumnWidth(min: 150, ideal: 160, max: 220)
         } detail: {
             VStack(spacing: 0) {
                 ClaudeStatusBanner()
@@ -54,7 +54,7 @@ struct MainWindow: View {
             }
             .inspector(isPresented: $isSetlistPanelVisible) {
                 SetlistPanel()
-                    .inspectorColumnWidth(min: 280, ideal: 320, max: 460)
+                    .inspectorColumnWidth(min: 240, ideal: 260, max: 400)
             }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -67,7 +67,8 @@ struct MainWindow: View {
                 }
             }
         }
-        .frame(minWidth: 1000, minHeight: 620)
+        // Sidebar + results + song detail + setlist minimum widths; a smaller window clips the side panels.
+        .frame(minWidth: 1040, minHeight: 560)
         .alert("Algo salió mal", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("Aceptar", role: .cancel) {}
         } message: {

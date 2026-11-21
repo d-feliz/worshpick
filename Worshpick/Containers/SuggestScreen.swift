@@ -14,11 +14,10 @@ struct SuggestScreen: View {
 
     var body: some View {
         @Bindable var model = model
-        HSplitView {
-            form
-                .frame(minWidth: 320, idealWidth: 380, maxWidth: 480, maxHeight: .infinity)
+        MainContentWithSidePanel(sidePanelMaximumWidth: 440, sidePanelEdge: .leading) {
             results
-                .frame(minWidth: 380, maxWidth: .infinity, maxHeight: .infinity)
+        } sidePanel: {
+            form
         }
         .navigationTitle("Sugerir canciones")
         .onAppear {

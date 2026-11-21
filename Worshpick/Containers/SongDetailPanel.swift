@@ -109,18 +109,24 @@ struct SongDetailPanel: View {
                 .textFieldStyle(.plain)
                 .onSubmit { saveIfChanged(artistDraft, original: song.artist) { .artist($0) } }
             Text(song.summary).font(.callout).foregroundStyle(.secondary)
-            HStack(spacing: 16) {
-                Picker("Idioma", selection: Binding(get: { song.language ?? .es }, set: { model.saveManualEdit(songId: song.id, .language($0)) })) {
-                    ForEach(SongLanguage.allCases, id: \.self) { Text(DisplayFormatting.language($0)).tag($0) }
-                }
-                .fixedSize()
-                Picker("Energía", selection: Binding(get: { song.energy ?? .medium }, set: { model.saveManualEdit(songId: song.id, .energy($0)) })) {
-                    ForEach(Energy.allCases, id: \.self) { Text(DisplayFormatting.energy($0)).tag($0) }
-                }
-                .fixedSize()
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) { languageAndEnergyPickers }
+                VStack(alignment: .leading, spacing: 6) { languageAndEnergyPickers }
             }
             .controlSize(.small)
         }
+    }
+
+    @ViewBuilder
+    private var languageAndEnergyPickers: some View {
+        Picker("Idioma", selection: Binding(get: { song.language ?? .es }, set: { model.saveManualEdit(songId: song.id, .language($0)) })) {
+            ForEach(SongLanguage.allCases, id: \.self) { Text(DisplayFormatting.language($0)).tag($0) }
+        }
+        .fixedSize()
+        Picker("Energía", selection: Binding(get: { song.energy ?? .medium }, set: { model.saveManualEdit(songId: song.id, .energy($0)) })) {
+            ForEach(Energy.allCases, id: \.self) { Text(DisplayFormatting.energy($0)).tag($0) }
+        }
+        .fixedSize()
     }
 
     private var tagsSection: some View {
@@ -184,9 +190,11 @@ struct SongDetailPanel: View {
                 }
             } label: {
                 Text(values.isEmpty ? "Elegir…" : values.joined(separator: ", "))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
             .menuStyle(.borderlessButton)
-            .fixedSize()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
