@@ -14,6 +14,7 @@ public struct ProcessClaudeRunner: ClaudeRunning {
             arguments: Self.arguments(for: request),
             standardInput: Data(request.prompt.utf8),
             workingDirectory: request.readableDirectories.first ?? FileManager.default.temporaryDirectory,
+            environment: Self.environmentWithoutParentClaudeSession(ProcessInfo.processInfo.environment),
             extraPathFolders: [binaryURL.deletingLastPathComponent().path, "/opt/homebrew/bin", "/usr/local/bin"],
             timeout: request.timeout
         )
@@ -27,6 +28,16 @@ public struct ProcessClaudeRunner: ClaudeRunning {
     /// The prompt goes through stdin, so long OCR text never hits the argument length limit.
     /// `Process` turns arguments into decomposed Unicode (NFD), so an unescaped "Adoración" in a schema enum
     /// never matches the composed "Adoración" the model writes, and the CLI gives up after 5 attempts.
+    /// An app opened from a Claude Code session inherits its CLAUDECODE / CLAUDE_CODE_* variables.
+    /// With them the CLI runs as that session's child and waits forever for a host that never answers.
+    static func environmentWithoutParentClaudeSession(_ environment: [String: String]) -> [String: String] {
+        let parentSessionPrefixes = ["CLAUDECODE", "CLAUDE_CODE_", "CLAUDE_AGENT_SDK_", "CLAUDE_PID", "CLAUDE_EFFORT"]
+        return environment.filter { name, _ in
+            let belongsToParentSession = parentSessionPrefixes.contains { name.hasPrefix($0) }
+            return !belongsToParentSession
+        }
+    }
+
     static func arguments(for request: ClaudeRequest) -> [String] {
         var arguments = [
             "-p",
@@ -55,13 +66,14 @@ struct ProcessResult: Sendable {
 enum ProcessRunner {
     static func run(
         executableURL: URL, arguments: [String], standardInput: Data, workingDirectory: URL,
+        environment inheritedEnvironment: [String: String] = ProcessInfo.processInfo.environment,
         extraPathFolders: [String] = [], timeout: Duration
     ) async throws -> ProcessResult {
         let process = Process()
         process.executableURL = executableURL
         process.arguments = arguments
         process.currentDirectoryURL = workingDirectory
-        var environment = ProcessInfo.processInfo.environment
+        var environment = inheritedEnvironment
         environment["PATH"] = (extraPathFolders + [environment["PATH"] ?? "/usr/bin:/bin"]).joined(separator: ":")
         process.environment = environment
 
@@ -97,22 +109,28 @@ enum ProcessRunner {
                 }
                 Task {
                     try? await Task.sleep(for: timeout)
-                    if process.isRunning {
-                        timeoutFlag.set()
-                        process.terminate()
-                    }
+                    guard process.isRunning else { return }
+                    timeoutFlag.set()
+                    process.terminate()
+                    // The CLI can ignore SIGTERM while it waits; without a hard kill the song stays "analyzing" forever.
+                    try? await Task.sleep(for: .seconds(5))
+                    if process.isRunning { kill(process.processIdentifier, SIGKILL) }
                 }
             }
         } onCancel: {
-            if process.isRunning { process.terminate() }
+            guard process.isRunning else { return }
+            process.terminate()
+            DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+                if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+            }
         }
 
         outputPipe.fileHandleForReading.readabilityHandler = nil
         errorPipe.fileHandleForReading.readabilityHandler = nil
+        // Checked before reading to the end: a child process left behind can keep the pipes open.
+        if timeoutFlag.isSet { throw ClaudeError.timedOut }
         collectedOutput.append(outputPipe.fileHandleForReading.readDataToEndOfFile())
         collectedError.append(errorPipe.fileHandleForReading.readDataToEndOfFile())
-
-        if timeoutFlag.isSet { throw ClaudeError.timedOut }
         return ProcessResult(exitCode: exitCode, standardOutput: collectedOutput.value, standardError: collectedError.value)
     }
 }

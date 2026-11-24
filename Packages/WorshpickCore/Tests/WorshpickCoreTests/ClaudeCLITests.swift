@@ -133,4 +133,25 @@ import Testing
         }
         #expect(clock.now - start < .seconds(5))
     }
+
+    @Test func timeoutKillsAProcessThatIgnoresTerminate() async throws {
+        let clock = ContinuousClock()
+        let start = clock.now
+        await #expect(throws: ClaudeError.timedOut) {
+            try await ProcessRunner.run(
+                executableURL: URL(fileURLWithPath: "/bin/sh"), arguments: ["-c", "trap '' TERM; sleep 30"], standardInput: Data(),
+                workingDirectory: FileManager.default.temporaryDirectory, timeout: .milliseconds(300)
+            )
+        }
+        #expect(clock.now - start < .seconds(9))
+    }
+
+    @Test func childEnvironmentDropsTheParentClaudeSession() {
+        let parentEnvironment = [
+            "HOME": "/Users/me", "PATH": "/usr/bin", "CLAUDECODE": "1",
+            "CLAUDE_CODE_CHILD_SESSION": "1", "CLAUDE_AGENT_SDK_VERSION": "0.3", "CLAUDE_PID": "42",
+        ]
+        let childEnvironment = ProcessClaudeRunner.environmentWithoutParentClaudeSession(parentEnvironment)
+        #expect(childEnvironment == ["HOME": "/Users/me", "PATH": "/usr/bin"])
+    }
 }

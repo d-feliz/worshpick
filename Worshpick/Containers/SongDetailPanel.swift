@@ -48,7 +48,7 @@ struct SongDetailPanel: View {
             }
         }
         .confirmationDialog("¿Eliminar \"\(song.title)\"?", isPresented: $isDeleteConfirmationPresented) {
-            Button("Eliminar", role: .destructive) { model.deleteSong(song) }
+            Button("Eliminar", role: .destructive) { model.deleteSongs(withIds: [song.id]) }
         } message: {
             Text("Se borra el video de la biblioteca de Worshpick. El archivo original no se toca.")
         }

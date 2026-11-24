@@ -159,10 +159,25 @@ final class AppModel {
         catalogDidChange()
     }
 
-    func deleteSong(_ song: Song) {
-        perform { try libraryService.deleteSong(song) }
+    func deleteSongs(withIds songIds: Set<UUID>) {
+        perform {
+            for songId in songIds {
+                guard let song = try catalogStore.song(id: songId) else { continue }
+                try libraryService.deleteSong(song)
+            }
+        }
         catalogDidChange()
         setlistDidChange()
+    }
+
+    func reanalyze(songIds: [UUID]) async {
+        for songId in songIds { await reanalyze(songId) }
+        catalogDidChange()
+    }
+
+    func reprocessWithClaudeOCR(songIds: [UUID]) async {
+        for songId in songIds { await reprocessWithClaudeOCR(songId) }
+        catalogDidChange()
     }
 
     func reanalyze(_ songId: UUID) async {
@@ -181,10 +196,7 @@ final class AppModel {
     func retryFailedSongsWithText() async {
         let failedSongs = ((try? catalogStore.allSongs()) ?? []).filter { $0.status == .failed }
         let failedSongsWithText = failedSongs.filter { $0.failureReason != IngestPipeline.noTextFoundReason }
-        for song in failedSongsWithText {
-            await reanalyze(song.id)
-        }
-        catalogDidChange()
+        await reanalyze(songIds: failedSongsWithText.map(\.id))
     }
 
     func resumeIngest() async {

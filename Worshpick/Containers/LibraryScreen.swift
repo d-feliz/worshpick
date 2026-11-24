@@ -15,7 +15,8 @@ struct LibraryScreen: View {
     @State private var filters = SearchFilters()
     @State private var results: [SearchResult] = []
     @State private var themeOptions: [String] = []
-    @State private var selectedSongId: UUID?
+    @State private var selectedSongIds: Set<UUID> = []
+    @State private var songIdsPendingDeletion: Set<UUID> = []
     @State private var isImporterPresented = false
     @State private var isDropTargeted = false
 
@@ -44,6 +45,16 @@ struct LibraryScreen: View {
                 } sidePanel: {
                     SongDetailPanel(song: selectedSong)
                 }
+            } else if hasSeveralSongsSelected {
+                MainContentWithSidePanel {
+                    resultsList
+                } sidePanel: {
+                    SelectedSongsPanel(
+                        songIds: selectedSongIdsInResultOrder,
+                        onDeleteRequest: { songIdsPendingDeletion = selectedSongIds },
+                        onClearSelection: { selectedSongIds = [] }
+                    )
+                }
             } else {
                 resultsList
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -52,6 +63,11 @@ struct LibraryScreen: View {
         .navigationTitle("Biblioteca")
         .searchable(text: $searchText, placement: .toolbar, prompt: "Título, autor, letra, tema, Romanos 8…")
         .toolbar {
+            ToolbarItem {
+                Button { songIdsPendingDeletion = selectedSongIds } label: { Label("Eliminar", systemImage: "trash") }
+                    .help("Eliminar de la biblioteca las canciones seleccionadas")
+                    .disabled(selectedSongIds.isEmpty)
+            }
             ToolbarItem {
                 Button { isImporterPresented = true } label: { Label("Importar…", systemImage: "square.and.arrow.down") }
                     .help("Importar videos de letras")
@@ -79,6 +95,15 @@ struct LibraryScreen: View {
                     .padding(8)
             }
         }
+        .confirmationDialog(deletionConfirmationTitle, isPresented: isDeletionConfirmationPresented) {
+            Button("Eliminar", role: .destructive) {
+                model.deleteSongs(withIds: songIdsPendingDeletion)
+                selectedSongIds.subtract(songIdsPendingDeletion)
+                songIdsPendingDeletion = []
+            }
+        } message: {
+            Text("Se borran los videos de la biblioteca de Worshpick. Los archivos originales no se tocan.")
+        }
         .alert("Importación terminada", isPresented: Binding(get: { model.importSummary != nil }, set: { if !$0 { model.importSummary = nil } })) {
             Button("Aceptar", role: .cancel) {}
         } message: {
@@ -90,8 +115,30 @@ struct LibraryScreen: View {
     }
 
     private var selectedSong: Song? {
-        guard let selectedSongId else { return nil }
+        guard selectedSongIds.count == 1, let selectedSongId = selectedSongIds.first else { return nil }
         return results.first(where: { $0.song.id == selectedSongId })?.song ?? model.song(id: selectedSongId)
+    }
+
+    private var hasSeveralSongsSelected: Bool { selectedSongIds.count > 1 }
+
+    private var selectedSongIdsInResultOrder: [UUID] {
+        results.map(\.song.id).filter(selectedSongIds.contains)
+    }
+
+    /// Dragging a selected row carries the whole selection, like Finder; an unselected row is dragged alone.
+    private func songIdsToDrag(startingAt songId: UUID) -> [UUID] {
+        selectedSongIds.contains(songId) ? selectedSongIdsInResultOrder : [songId]
+    }
+
+    private var deletionConfirmationTitle: String {
+        if songIdsPendingDeletion.count == 1, let song = songIdsPendingDeletion.first.flatMap(model.song(id:)) {
+            return "¿Eliminar \"\(song.title)\"?"
+        }
+        return "¿Eliminar \(songIdsPendingDeletion.count) canciones?"
+    }
+
+    private var isDeletionConfirmationPresented: Binding<Bool> {
+        Binding(get: { !songIdsPendingDeletion.isEmpty }, set: { if !$0 { songIdsPendingDeletion = [] } })
     }
 
     @ViewBuilder
@@ -99,16 +146,33 @@ struct LibraryScreen: View {
         if results.isEmpty {
             emptyState
         } else {
-            List(selection: $selectedSongId) {
+            List(selection: $selectedSongIds) {
                 ForEach(results) { result in
+                    let songIdsToDrag = songIdsToDrag(startingAt: result.song.id)
                     SongRow(result: result) { model.addToCurrentSetlist(songIds: [result.song.id]) }
                         .tag(result.song.id)
-                        .draggable(SongDragItem(songIds: [result.song.id])) {
-                            Label(result.song.title, systemImage: "music.note")
+                        .draggable(SongDragItem(songIds: songIdsToDrag)) {
+                            Label(songIdsToDrag.count == 1 ? result.song.title : "\(songIdsToDrag.count) canciones", systemImage: "music.note")
                         }
                 }
             }
             .listStyle(.inset)
+            .contextMenu(forSelectionType: UUID.self) { clickedSongIds in
+                songContextMenu(for: clickedSongIds)
+            }
+            .onDeleteCommand { songIdsPendingDeletion = selectedSongIds }
+        }
+    }
+
+    @ViewBuilder
+    private func songContextMenu(for clickedSongIds: Set<UUID>) -> some View {
+        if !clickedSongIds.isEmpty {
+            let songIdsInResultOrder = results.map(\.song.id).filter(clickedSongIds.contains)
+            Button("Añadir al setlist") { model.addToCurrentSetlist(songIds: songIdsInResultOrder) }
+            Button("Reanalizar") { Task { await model.reanalyze(songIds: songIdsInResultOrder) } }
+            Button("Reprocesar con Claude OCR") { Task { await model.reprocessWithClaudeOCR(songIds: songIdsInResultOrder) } }
+            Divider()
+            Button("Eliminar de la biblioteca…", role: .destructive) { songIdsPendingDeletion = clickedSongIds }
         }
     }
 
@@ -156,7 +220,7 @@ struct LibraryScreen: View {
         results = found
         themeOptions = themes
         #if DEBUG
-        if DebugSnapshot.selectsFirstResult, selectedSongId == nil { selectedSongId = found.first?.song.id }
+        if DebugSnapshot.selectsFirstResult, selectedSongIds.isEmpty, let firstSongId = found.first?.song.id { selectedSongIds = [firstSongId] }
         #endif
     }
 
