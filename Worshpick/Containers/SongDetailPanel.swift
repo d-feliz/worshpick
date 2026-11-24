@@ -63,8 +63,13 @@ struct SongDetailPanel: View {
             .aspectRatio(16 / 9, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .task(id: song.id) {
+                model.videoPlayback.discard(player)
                 let videoURL = model.videoURL(for: song)
-                player = FileManager.default.fileExists(atPath: videoURL.path) ? AVPlayer(url: videoURL) : nil
+                player = FileManager.default.fileExists(atPath: videoURL.path) ? model.videoPlayback.makePlayer(for: videoURL) : nil
+            }
+            .onDisappear {
+                model.videoPlayback.discard(player)
+                player = nil
             }
     }
 

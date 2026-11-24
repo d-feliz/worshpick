@@ -27,6 +27,7 @@ final class AppModel {
     let ingestPipeline: IngestPipeline
     let suggester: Suggester
     let claudeRunner: any ClaudeRunning
+    @ObservationIgnored let videoPlayback = SingleVideoPlayback()
 
     private(set) var settings: AppSettings
     private(set) var ingestProgress = IngestProgress.idle

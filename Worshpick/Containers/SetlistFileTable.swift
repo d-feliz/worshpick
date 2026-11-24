@@ -26,6 +26,7 @@ struct SetlistFileTable: NSViewRepresentable {
     var onReorder: ([Int64]) -> Void
     var onDropSongs: ([UUID], Int) -> Void
     var onRemove: ([Int64]) -> Void
+    var onOpenSong: (UUID) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -51,6 +52,8 @@ struct SetlistFileTable: NSViewRepresentable {
         menu.addItem(NSMenuItem(title: "Mostrar en Finder", action: #selector(Coordinator.revealClickedRows(_:)), keyEquivalent: ""))
         menu.items.forEach { $0.target = context.coordinator }
         tableView.menu = menu
+        tableView.target = context.coordinator
+        tableView.doubleAction = #selector(Coordinator.openClickedSong(_:))
 
         context.coordinator.tableView = tableView
         let scrollView = NSScrollView()
@@ -65,6 +68,7 @@ struct SetlistFileTable: NSViewRepresentable {
         coordinator.onReorder = onReorder
         coordinator.onDropSongs = onDropSongs
         coordinator.onRemove = onRemove
+        coordinator.onOpenSong = onOpenSong
         guard coordinator.rows != rows else { return }
         let selectedItemIds = coordinator.selectedItemIds
         coordinator.rows = rows
@@ -79,6 +83,7 @@ struct SetlistFileTable: NSViewRepresentable {
         var onReorder: ([Int64]) -> Void = { _ in }
         var onDropSongs: ([UUID], Int) -> Void = { _, _ in }
         var onRemove: ([Int64]) -> Void = { _ in }
+        var onOpenSong: (UUID) -> Void = { _ in }
         weak var tableView: NSTableView?
         private var thumbnailsByFileURL: [URL: NSImage] = [:]
         private var thumbnailRequestsInFlight: Set<URL> = []
@@ -152,6 +157,11 @@ struct SetlistFileTable: NSViewRepresentable {
 
         @objc func removeClickedRows(_ sender: Any?) {
             onRemove(clickedOrSelectedRows.map(\.itemId))
+        }
+
+        @objc func openClickedSong(_ sender: Any?) {
+            guard let clickedRow = tableView?.clickedRow, rows.indices.contains(clickedRow) else { return }
+            onOpenSong(rows[clickedRow].songId)
         }
 
         @objc func revealClickedRows(_ sender: Any?) {

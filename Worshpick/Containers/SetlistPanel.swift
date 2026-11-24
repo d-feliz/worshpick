@@ -4,6 +4,7 @@ import WorshpickCore
 struct SetlistPanel: View {
     @Environment(AppModel.self) private var model
     @State private var descriptionDraft = ""
+    @State private var songIdShownInSheet: UUID?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,10 +25,11 @@ struct SetlistPanel: View {
                         rows: fileRows(for: setlistWithItems),
                         onReorder: { orderedItemIds in model.updateSetlist { try $0.reorderItems(in: $1, orderedItemIds: orderedItemIds) } },
                         onDropSongs: { songIds, position in model.addToCurrentSetlist(songIds: songIds, at: position) },
-                        onRemove: { itemIds in model.updateSetlist { store, setlistId in try itemIds.forEach { try store.removeItem(id: $0, from: setlistId) } } }
+                        onRemove: { itemIds in model.updateSetlist { store, setlistId in try itemIds.forEach { try store.removeItem(id: $0, from: setlistId) } } },
+                        onOpenSong: { songIdShownInSheet = $0 }
                     )
                     Divider()
-                    Label("Arrastra los archivos a tu programa de presentación. Selecciona varios con ⌘ o ⇧.", systemImage: "hand.draw")
+                    Label("Arrastra los archivos a tu programa de presentación. Selecciona varios con ⌘ o ⇧. Doble clic abre la canción.", systemImage: "hand.draw")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(8)
@@ -42,6 +44,15 @@ struct SetlistPanel: View {
                 }
             }
         }
+        .sheet(isPresented: isSongSheetPresented) {
+            if let songIdShownInSheet {
+                SongSheet(songId: songIdShownInSheet)
+            }
+        }
+    }
+
+    private var isSongSheetPresented: Binding<Bool> {
+        Binding(get: { songIdShownInSheet != nil }, set: { if !$0 { songIdShownInSheet = nil } })
     }
 
     private func header(for setlist: Setlist) -> some View {
