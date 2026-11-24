@@ -20,7 +20,7 @@ extension NSPasteboard.PasteboardType {
     static let worshpickSong = NSPasteboard.PasteboardType(UTType.worshpickSong.identifier)
 }
 
-/// AppKit table so several selected files can be dragged out to Proclaim at once, in setlist order.
+/// AppKit table so several selected files can be dragged out to a presentation app at once, in setlist order.
 struct SetlistFileTable: NSViewRepresentable {
     var rows: [SetlistFileRow]
     var onReorder: ([Int64]) -> Void

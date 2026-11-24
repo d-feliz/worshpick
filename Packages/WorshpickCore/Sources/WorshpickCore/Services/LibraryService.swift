@@ -30,7 +30,7 @@ public enum ImportError: Error, Equatable, LocalizedError {
     }
 }
 
-/// Owns the copied videos in `<library>/Videos/<uuid>/<original name>`; the original name is what Proclaim shows on drop.
+/// Owns the copied videos in `<library>/Videos/<uuid>/<original name>`; the original name is what presentation apps show on drop.
 public final class LibraryService: Sendable {
     public static let supportedFileExtensions: Set<String> = ["mp4", "mov", "m4v"]
     private static let videosFolderName = "Videos"

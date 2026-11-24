@@ -7,7 +7,7 @@ You import your lyric videos. Worshpick reads the lyrics from the video frames a
 - **Suggest:** describe the service (passages, main idea, occasion) and Claude picks songs from your catalog. You can swap any of them.
 - **Search:** fast, offline search by title, artist, lyrics, meaning, tags, and Bible references such as `Romanos 8` or `Sal 23`.
 
-The result is an ordered list of video files that you drag straight into Proclaim.
+The result is an ordered list of video files that you drag straight into your presentation software or any other app that accepts video files.
 
 > The app interface is in Spanish.
 
@@ -19,7 +19,7 @@ The result is an ordered list of video files that you drag straight into Proclai
 - **Suggester:** uses service templates (for example two opening songs, two worship songs and one response song) and avoids songs used in the last N Sundays. Claude can only return songs that are in your catalog.
 - **Editable results:** every AI field can be edited by hand, and later reprocessing does not overwrite your edits.
 - **Bulk actions:** select several songs (Shift + click, Shift + arrow keys, ⌘ + click) to add them to the setlist, reanalyze them, reprocess them with Claude OCR, or remove them.
-- **Setlists:** reorder songs, save drafts, mark a setlist as used (this feeds the usage history), and drag the video files into Proclaim.
+- **Setlists:** reorder songs, save drafts, mark a setlist as used (this feeds the usage history), and drag the video files into your presentation app.
 
 ## Requirements
 
@@ -67,7 +67,7 @@ Everything is stored on your Mac in `~/Library/Application Support/Worshpick/`:
 | Path | Contents |
 |---|---|
 | `catalog.sqlite` | Songs, tags, passages, setlists, and usage history |
-| `Videos/<uuid>/<original name>` | The copied videos. The original file name is kept, because Proclaim shows it. |
+| `Videos/<uuid>/<original name>` | The copied videos. The original file name is kept, because presentation apps show it. |
 | `settings.json` | Settings, vocabularies, and service templates |
 
 Claude receives only the OCR text and the file name of a song, except when you choose *Reprocesar con Claude OCR*. In that case it also reads up to 40 frames of the video.

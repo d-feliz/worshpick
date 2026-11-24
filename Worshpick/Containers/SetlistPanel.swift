@@ -27,7 +27,7 @@ struct SetlistPanel: View {
                         onRemove: { itemIds in model.updateSetlist { store, setlistId in try itemIds.forEach { try store.removeItem(id: $0, from: setlistId) } } }
                     )
                     Divider()
-                    Label("Arrastra los archivos a Proclaim. Selecciona varios con ⌘ o ⇧.", systemImage: "hand.draw")
+                    Label("Arrastra los archivos a tu programa de presentación. Selecciona varios con ⌘ o ⇧.", systemImage: "hand.draw")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(8)
