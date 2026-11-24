@@ -1,5 +1,7 @@
 # Worshpick
 
+<img src="docs/design/app-icon/worshpick-icon-1024.png" alt="Worshpick app icon" width="128">
+
 A macOS app that helps you choose the worship songs for a church service from your own library of lyric videos.
 
 You import your lyric videos. Worshpick reads the lyrics from the video frames and uses Claude to tag each song: what it invites people to do (reflection, joy, hope…), its themes, related Bible passages, the moment of the service it fits, and its energy. Then you build a setlist in one of two ways:
